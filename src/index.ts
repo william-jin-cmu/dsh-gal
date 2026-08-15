@@ -17,7 +17,7 @@ import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Context as CordisContext } from '@deepseek-ai/cordis'
-import { BlockAssembler, createUserMessage, deepFreeze } from '@deepseek-ai/dsh-llm'
+import { BlockAssembler, createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
@@ -159,20 +159,26 @@ export function apply(ctx: Context, config: Config): void {
       ?? (ctx.get('agentDefaultModel') as { currentSelection?: () => { provider: string; model: string } } | undefined)?.currentSelection?.().model
     if (provider === undefined || model === undefined) return { emotion: heuristicEmotion(reply), judge: 'heuristic' }
     try {
+      const timeoutMs = config.judgeTimeoutMs ?? 8000
       const assembler = new BlockAssembler()
-      const options: GenerateOptions = deepFreeze({
+      const options: GenerateOptions = {
         provider,
         model,
         // Generous cap: reasoning-capable routes burn thinking tokens before
         // the one-word answer; text blocks alone are parsed below.
         maxTokens: 512,
-        signal: AbortSignal.timeout(config.judgeTimeoutMs ?? 4000),
+        signal: AbortSignal.timeout(timeoutMs),
         messages: [createUserMessage({
           content: [{ type: 'text', text: classifierPrompt(reply) }],
           source: { kind: 'plugin', plugin: name },
         })],
-      }) as GenerateOptions
-      for await (const chunk of ctx.llm.stream(options)) assembler.push(chunk as never)
+      }
+      // Hard deadline around the whole stream: a reply must never be lost to a
+      // judge that outlives its abort signal.
+      await Promise.race([
+        (async () => { for await (const chunk of ctx.llm.stream(options)) assembler.push(chunk as never) })(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`judge deadline ${timeoutMs * 2}ms exceeded`)), timeoutMs * 2)),
+      ])
       const answer = assembler.blocks()
         .map(block => block.type === 'text' ? block.text : '').join('')
         .trim().toLowerCase().replace(/[^a-z]/g, '')

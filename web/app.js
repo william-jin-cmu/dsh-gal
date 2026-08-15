@@ -225,8 +225,12 @@
       case 'assistant':
         pushHistory('assistant', ev.text);
         setBusy(false);
+        // live conversation favors freshness: unshown backlog yields to the
+        // newest reply (everything stays readable in History)
+        msgQueue.length = 0;
         msgQueue.push({ text: ev.text, emotion: ev.emotion });
-        playNext();
+        if (waitingAdvance && pageRest.length === 0) advanceNow();
+        else playNext();
         break;
       case 'busy':
         setBusy(ev.value);
