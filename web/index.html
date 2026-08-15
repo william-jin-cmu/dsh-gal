@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dsh-gal</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="stage">
+    <!-- Character layers: cross-faded video loops (one per emotion), image fallback -->
+    <div id="character">
+      <video id="layer-a" class="char-layer" autoplay muted loop playsinline></video>
+      <video id="layer-b" class="char-layer" autoplay muted loop playsinline></video>
+      <img id="layer-img" class="char-layer" alt="">
+    </div>
+    <div id="vignette"></div>
+
+    <!-- Top bar -->
+    <header id="topbar">
+      <div id="title">dsh-gal <span id="conn-dot" title="disconnected"></span></div>
+      <div id="topbar-actions">
+        <button id="btn-history" title="Backlog (L)">History</button>
+        <button id="btn-auto" title="Auto mode (A)">Auto</button>
+      </div>
+    </header>
+
+    <!-- Status ticker while the agent works -->
+    <div id="ticker" class="hidden"><span id="ticker-text"></span></div>
+
+    <!-- Dialogue box -->
+    <div id="dialogue">
+      <div id="nameplate"><span id="char-name">Cetus</span><span id="emotion-tag"></span></div>
+      <div id="text-window" tabindex="0">
+        <p id="dialogue-text"></p>
+        <div id="advance" class="hidden">▼</div>
+      </div>
+      <div id="last-user" class="hidden"><span class="you-label">You</span><span id="last-user-text"></span></div>
+      <form id="input-row" autocomplete="off">
+        <input id="input" type="text" placeholder="Say something…" spellcheck="false">
+        <button id="btn-send" type="submit">Send</button>
+      </form>
+    </div>
+
+    <!-- History overlay -->
+    <div id="history" class="hidden">
+      <div id="history-head">
+        <span>Backlog</span>
+        <button id="btn-close-history">Close</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

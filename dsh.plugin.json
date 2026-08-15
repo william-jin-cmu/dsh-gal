@@ -1,0 +1,11 @@
+{
+  "id": "dsh-gal",
+  "version": "0.1.0",
+  "main": "./lib/index.js",
+  "description": "Galgame / visual-novel UI: a whale-girl companion with animated expressions who speaks the assistant's replies one scene at a time, with a click-to-open backlog",
+  "engines": { "dsh": ">=0.0.1" },
+  "contributes": {
+    "tools": [],
+    "skills": []
+  }
+}
