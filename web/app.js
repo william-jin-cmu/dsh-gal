@@ -139,13 +139,33 @@
     beginMessage(next.text);
   }
 
-  $('text-window').addEventListener('click', advanceNow);
+  // VN conventions: click anywhere on the stage advances; right-click (or H)
+  // hides the window to admire the art; any input restores it.
+  function setUiHidden(value) {
+    document.body.classList.toggle('ui-hidden', value);
+  }
+  $('stage').addEventListener('click', (ev) => {
+    const el = ev.target;
+    if (el.closest('#input-row') || el.closest('#menu-row') || el.closest('#history')) return;
+    if (document.body.classList.contains('ui-hidden')) { setUiHidden(false); return; }
+    advanceNow();
+  });
+  $('stage').addEventListener('contextmenu', (ev) => {
+    if (ev.target.closest('#history')) return;
+    ev.preventDefault();
+    setUiHidden(!document.body.classList.contains('ui-hidden'));
+  });
   document.addEventListener('keydown', (ev) => {
     if (ev.target === input) return;
+    if (document.body.classList.contains('ui-hidden')) { setUiHidden(false); return; }
     if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); advanceNow(); }
+    if (ev.key === 'Control') revealRestOfPage();
     if (ev.key === 'l' || ev.key === 'L') toggleHistory();
     if (ev.key === 'a' || ev.key === 'A') toggleAuto();
+    if (ev.key === 'h' || ev.key === 'H') setUiHidden(true);
   });
+  $('btn-skip').addEventListener('click', () => { if (typing) revealRestOfPage(); else advanceNow(); });
+  $('btn-hide').addEventListener('click', () => setUiHidden(true));
 
   // ---------- history ----------
   const history = []; // {role, text}

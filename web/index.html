@@ -16,30 +16,35 @@
     </div>
     <div id="vignette"></div>
 
-    <!-- Top bar -->
     <header id="topbar">
-      <div id="title">dsh-gal <span id="conn-dot" title="disconnected"></span></div>
-      <div id="topbar-actions">
-        <button id="btn-history" title="Backlog (L)">History</button>
-        <button id="btn-auto" title="Auto mode (A)">Auto</button>
-      </div>
+      <div id="title">DSH-GAL <span id="conn-dot" title="disconnected"></span></div>
     </header>
 
     <!-- Status ticker while the agent works -->
     <div id="ticker" class="hidden"><span id="ticker-text"></span></div>
 
-    <!-- Dialogue box -->
+    <!-- Dialogue assembly (galgame message window) -->
     <div id="dialogue">
-      <div id="nameplate"><span id="char-name">Cetus</span><span id="emotion-tag"></span></div>
-      <div id="text-window" tabindex="0">
-        <p id="dialogue-text"></p>
-        <div id="advance" class="hidden">▼</div>
+      <div id="msgbox">
+        <div id="nameplate"><span id="char-name">Cetus</span><span id="emotion-tag"></span></div>
+        <div id="text-window" tabindex="0">
+          <p id="dialogue-text"></p>
+          <div id="advance" class="hidden">◆</div>
+        </div>
+        <div id="box-bottom">
+          <form id="input-row" autocomplete="off">
+            <input id="input" type="text" placeholder="Say something…" spellcheck="false">
+            <button id="btn-send" type="submit">SEND</button>
+          </form>
+          <nav id="menu-row">
+            <button type="button" id="btn-skip" title="Reveal instantly (Ctrl)">SKIP</button>
+            <button type="button" id="btn-auto" title="Auto mode (A)">AUTO</button>
+            <button type="button" id="btn-history" title="Backlog (L)">LOG</button>
+            <button type="button" id="btn-hide" title="Hide window (H / right-click)">HIDE</button>
+          </nav>
+        </div>
       </div>
       <div id="last-user" class="hidden"><span class="you-label">You</span><span id="last-user-text"></span></div>
-      <form id="input-row" autocomplete="off">
-        <input id="input" type="text" placeholder="Say something…" spellcheck="false">
-        <button id="btn-send" type="submit">Send</button>
-      </form>
     </div>
 
     <!-- History overlay -->
