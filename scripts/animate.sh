@@ -14,20 +14,31 @@ fi
 
 if [[ "$MODEL" == "h3" ]]; then
   ENDPOINT="minimax/h3/image-to-video"
-  BODY_EXTRA='"resolution": "768p", "duration": 6'
+  BODY_EXTRA='"resolution": "768P", "duration": 5'
 else
   ENDPOINT="bytedance/seedance-2.0/mini/image-to-video"
   BODY_EXTRA='"resolution": "720p", "duration": "5", "generate_audio": false'
 fi
 
-# 1. upload the image to fal storage
+# 1. upload the image to fal storage (recompress >1MB inputs to JPEG first:
+# multi-MB uploads intermittently die mid-TLS behind the local proxy)
+UPLOAD_SRC="$INPUT"
 MIME="image/png"
+if [ "$(stat -f%z "$INPUT")" -gt 1000000 ]; then
+  UPLOAD_SRC="$(mktemp /tmp/animate-upload-XXXX).jpg"
+  sips -s format jpeg -s formatOptions 92 "$INPUT" --out "$UPLOAD_SRC" >/dev/null
+  MIME="image/jpeg"
+fi
 UPLOAD=$(curl -sf -X POST "https://rest.alpha.fal.ai/storage/upload/initiate" \
   -H "Authorization: Key $FAL_API_KEY" -H "Content-Type: application/json" \
-  -d "{\"file_name\": \"$(basename "$INPUT")\", \"content_type\": \"$MIME\"}")
+  -d "{\"file_name\": \"$(basename "$UPLOAD_SRC")\", \"content_type\": \"$MIME\"}")
 UPLOAD_URL=$(echo "$UPLOAD" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'])")
 FILE_URL=$(echo "$UPLOAD" | python3 -c "import json,sys; print(json.load(sys.stdin)['file_url'])")
-curl -sf -X PUT "$UPLOAD_URL" -H "Content-Type: $MIME" --data-binary "@$INPUT" > /dev/null
+for i in 1 2 3; do
+  curl -sf -X PUT "$UPLOAD_URL" -H "Content-Type: $MIME" --data-binary "@$UPLOAD_SRC" > /dev/null && break
+  echo "upload attempt $i failed, retrying" >&2; sleep 3
+  [ "$i" = 3 ] && exit 1
+done
 echo "uploaded: $FILE_URL" >&2
 
 # 2. queue the generation
@@ -41,9 +52,9 @@ RESPONSE_URL=$(echo "$REQ" | python3 -c "import json,sys; print(json.load(sys.st
 echo "queued: $REQ_ID" >&2
 
 # 3. poll
-for i in $(seq 1 120); do
+for i in $(seq 1 200); do
   sleep 5
-  STATUS=$(curl -sf "$STATUS_URL" -H "Authorization: Key $FAL_API_KEY" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
+  STATUS=$(curl -sf "$STATUS_URL" -H "Authorization: Key $FAL_API_KEY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo UNKNOWN)
   echo "  [$i] $STATUS" >&2
   [[ "$STATUS" == "COMPLETED" ]] && break
 done
