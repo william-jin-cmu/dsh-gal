@@ -19,7 +19,7 @@ Your agent becomes a whale girl. Each reply plays as a dialogue scene — typewr
 ## Install
 
 ```bash
-git clone https://github.com/dsh-external/dsh-gal
+git clone https://github.com/william-jin-cmu/dsh-gal
 cd dsh-gal && ./scripts/build.sh   # links against your dsh checkout and compiles src/ → lib/
 ```
 
